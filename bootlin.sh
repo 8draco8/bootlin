@@ -1,17 +1,13 @@
 #!/bin/sh
 
 convertImage () {
-	set -o verbose
 	hdiutil convert -format UDRW -o $1 $1
-	set +o verbose
 }
 
 createBootableUSB () {
 	echo "To create bootable USB drive I need ROOT privileges. Please provide your password."
 	echo "After providing the password dd command will run. Unfortunatelly dd DOES NOT have any progress bar so despite the fact that nothing is showed, the script actually works, please be patient."
-	set -o verbose
 	sudo dd if=$1.dmg of=/dev/r$2 bs=1m
-	set +o verbose
 }
 
 regex='^.*\.iso$'
@@ -20,10 +16,14 @@ if [[ $1 =~ $regex ]];
 	then
 		echo "$1 will be use to create bootable USB"
 		echo "Please select target USB drive by typing in IDENTIFIER of your USB drive (eg. disk1):"
-		set -o verbose
 		diskutil list
-		set +o verbose
 		read driveName
+		driveRegex='^drive0?.*$'
+		if [[ $driveName =~ $driveRegex ]]; 
+			then
+			echo "Can't use $driveName"
+			exit
+		fi
 		echo "Are you sure that you want to use $driveName as bootable USB? All data on the device will be erased! [Y/n]"
 			read driveQuestion
 			if [[ $driveQuestion == "Y" ]] || [[ $driveQuestion == "y" ]] || [[ $driveQuestion == "yes" ]]; 
@@ -42,4 +42,5 @@ if [[ $1 =~ $regex ]];
 			fi
 	else
 		echo "Provided file is not in ISO format!"
+		exit
 fi
